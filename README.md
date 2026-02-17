@@ -28,14 +28,23 @@ cd init_roles
 
 ### Configure Variables
 
+**All available variables with detailed descriptions and defaults are documented in `group_vars/all.yml`.** Each variable includes inline comments explaining its purpose, default value, and usage examples.
+
 1. **Edit group variables** (applies to all hosts):
    ```bash
    vi group_vars/all.yml
    ```
+   
+   The `group_vars/all.yml` file contains comprehensive documentation for all variables organized by role, with:
+   - Variable descriptions
+   - Default values
+   - Usage examples
+   - Format specifications
+   - Important notes
 
 2. **Configure host-specific variables**:
    ```bash
-   cp host_vars/192.168.1.130.yml host_vars/<your_host_ip>.yml
+   cp host_vars/example.yml host_vars/<your_host_ip>.yml
    vi host_vars/<your_host_ip>.yml
    ```
 
@@ -219,6 +228,17 @@ The playbook executes roles in the following order to ensure proper dependencies
 16. **15_configure_bash** - Shell configuration
 17. **16_configure_network** - Network setup
 18. **17_update_reboot** - Updates and reboot (final step)
+
+## Variable Documentation
+
+**All variables are fully documented with descriptions, defaults, and examples directly in `group_vars/all.yml`.** Each variable includes inline comments explaining:
+- Purpose and usage
+- Default values
+- Format specifications
+- Examples
+- Important notes and warnings
+
+The file is organized by role sections, making it easy to find variables for specific functionality. Refer to `group_vars/all.yml` for complete variable documentation.
 
 ## Configuration Examples
 
