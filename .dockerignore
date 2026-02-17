@@ -1,0 +1,25 @@
+# Git и IDE
+.git
+.gitignore
+*.code-workspace
+
+# Данные (монтируются volume, не копировать в образ)
+data/
+delete/
+.cache/
+
+# Python
+**/venv/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+
+# Документация и прочее (не нужны в образах)
+docs/
+*.md
+*.7z
+pub_keys/
+roles/
+vars-file.yml
+migrate_to_data_dir.py
+Jenkinsfile

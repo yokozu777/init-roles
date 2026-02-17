@@ -1,0 +1,4 @@
+# Role 15_configure_bash default variables (override in group_vars/all.yml or host_vars)
+configure_bash: true  # Configure Bash (prompt, history) when true
+custom_bash_prompt: '\[\033[01;33m\]\u@\h\[\033[00m\]:\[\033[01;32m\]\w\[\033[00m\] \[\033[01;34m\][\#]\[\033[01;31m\]\$\[\033[00m\] '  # Custom Bash prompt with escape sequences
+bash_history_size: 10000  # Bash history size (number of lines)

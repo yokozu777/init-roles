@@ -1,0 +1,4 @@
+# Role 07_remove_unwanted_services default variables (override in group_vars/all.yml or host_vars)
+remove_cloud_init: true  # Remove cloud-init when true
+remove_snap: true  # Remove snap when true (Ubuntu only)
+disable_systemd_resolved: true  # Disable systemd-resolved (Ubuntu/Debian only)

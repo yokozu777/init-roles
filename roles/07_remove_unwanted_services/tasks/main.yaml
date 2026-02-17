@@ -1,0 +1,66 @@
+---
+- name: Stop cloud-init services (if present)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+    masked: yes
+  loop:
+    - cloud-init.service
+    - cloud-init-local.service
+    - cloud-config.service
+    - cloud-final.service
+  ignore_errors: true
+  when: remove_cloud_init | default(false) | bool
+
+- name: Remove cloud-init on RedHat-based systems (Oracle Linux)
+  ansible.builtin.yum:
+    name: cloud-init
+    state: absent
+  when:
+    - ansible_distribution == 'OracleLinux'
+    - remove_cloud_init | default(false) | bool
+
+- name: Remove cloud-init on Debian-based systems (Ubuntu/Debian)
+  ansible.builtin.apt:
+    name: cloud-init
+    state: absent
+    purge: yes
+    update_cache: yes
+  when:
+    - ansible_distribution in ['Ubuntu', 'Debian']
+    - remove_cloud_init | default(false) | bool
+
+- name: Remove snap and related services on Ubuntu
+  ansible.builtin.apt:
+    name:
+      - snapd
+    state: absent
+    purge: yes
+    autoremove: yes
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - remove_snap | default(false) | bool
+
+- name: Mask lingering snap services (just in case)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: no
+    state: stopped
+    masked: yes
+  loop:
+    - snapd.apparmor.service
+    - snapd.seeded.service
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - remove_snap | default(false) | bool
+  ignore_errors: true
+
+- name: Remove systemd-resolved package
+  ansible.builtin.apt:
+    name: systemd-resolved
+    state: absent
+  when:
+    - ansible_distribution in ['Ubuntu', 'Debian']
+    - disable_systemd_resolved | default(false) | bool
+

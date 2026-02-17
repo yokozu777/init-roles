@@ -1,0 +1,5 @@
+# Role 16_configure_network default variables (override in group_vars/all.yml or host_vars)
+configure_network: false  # Configure network interfaces when true
+network_config: ""  # Ubuntu/Debian: multiline string for /etc/network/interfaces
+network_interfaces: []  # Oracle Linux: list of dicts (name, type, bootproto, device, ipaddr, netmask, gateway, dns1, dns2)
+dns_servers: ["192.168.1.1"]  # DNS servers (list of IPs)

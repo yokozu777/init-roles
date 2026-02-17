@@ -1,0 +1,90 @@
+- name: Configure /etc/hosts
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_default_ipv4.address is defined
+  register: hosts_changed
+
+- name: Ensure /etc/network/interfaces backup exists (Ubuntu/Debian)
+  ansible.builtin.copy:
+    src: /etc/network/interfaces
+    dest: /etc/network/interfaces.bak
+    mode: '0644'
+    remote_src: true
+  when:
+    - configure_network | default(false)
+    - ansible_distribution in ['Ubuntu', 'Debian']
+  ignore_errors: true
+
+- name: Configure /etc/network/interfaces (Ubuntu/Debian)
+  ansible.builtin.copy:
+    dest: /etc/network/interfaces
+    content: "{{ network_config }}"
+    mode: '0644'
+  when:
+    - configure_network | default(false)
+    - ansible_distribution in ['Ubuntu', 'Debian']
+  register: interfaces_changed
+
+- name: Configure network for Oracle Linux (NetworkManager)
+  ansible.builtin.copy:
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ item.name }}
+    content: |
+      TYPE={{ item.type | default('Ethernet') }}
+      BOOTPROTO={{ item.bootproto | default('static') }}
+      NAME={{ item.name }}
+      DEVICE={{ item.device | default(item.name) }}
+      ONBOOT=yes
+      IPADDR={{ item.ipaddr }}
+      NETMASK={{ item.netmask | default('255.255.255.0') }}
+      GATEWAY={{ item.gateway | default('') }}
+      DNS1={{ item.dns1 | default('') }}
+      DNS2={{ item.dns2 | default('') }}
+    mode: '0644'
+  loop: "{{ network_interfaces | default([]) }}"
+  when:
+    - configure_network | default(false)
+    - ansible_distribution == 'OracleLinux'
+  register: network_interfaces_changed
+
+- name: Configure DNS servers
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      {% for dns in dns_servers %}
+      nameserver {{ dns }}
+      {% endfor %}
+    mode: '0644'
+  when: dns_servers is defined and dns_servers | length > 0
+  register: resolv_changed
+
+- name: Protect resolv.conf from NetworkManager (if NetworkManager is removed)
+  ansible.builtin.command: chattr +i /etc/resolv.conf
+  when:
+    - dns_servers is defined and dns_servers | length > 0
+    - resolv_changed.changed | default(false)
+    - ansible_distribution == 'OracleLinux'
+    - remove_networkmanager | default(false) | bool
+  ignore_errors: true
+
+- name: Restart networking service (Ubuntu/Debian)
+  ansible.builtin.systemd:
+    name: networking
+    state: restarted
+  when:
+    - ansible_distribution in ['Ubuntu', 'Debian']
+    - (hosts_changed.changed | default(false)) or
+      (interfaces_changed.changed | default(false))
+
+- name: Restart NetworkManager service (Oracle Linux)
+  ansible.builtin.systemd:
+    name: NetworkManager
+    state: restarted
+  when:
+    - ansible_distribution == 'OracleLinux'
+    - (hosts_changed.changed | default(false)) or
+      (network_interfaces_changed.changed | default(false))
+  ignore_errors: true

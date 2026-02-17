@@ -1,0 +1,33 @@
+---
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ hostname }}"
+  register: hostname_changed
+  when: hostname is defined and hostname | length > 0
+
+- name: Restart systemd-hostnamed service
+  ansible.builtin.systemd:
+    name: systemd-hostnamed
+    state: restarted
+  when:
+    - hostname_changed.changed | default(false)
+    - ansible_distribution in ['Ubuntu', 'Debian', 'OracleLinux']
+  ignore_errors: true
+
+- name: Restart NetworkManager service (Oracle Linux)
+  ansible.builtin.systemd:
+    name: NetworkManager
+    state: restarted
+  when:
+    - hostname_changed.changed | default(false)
+    - ansible_distribution == 'OracleLinux'
+  ignore_errors: true
+
+- name: Restart networking service (Ubuntu/Debian)
+  ansible.builtin.systemd:
+    name: networking
+    state: restarted
+  when:
+    - hostname_changed.changed | default(false)
+    - ansible_distribution in ['Ubuntu', 'Debian']
+  ignore_errors: true

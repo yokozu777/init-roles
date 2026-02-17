@@ -1,0 +1,4 @@
+# Role 12_date_timezone default variables (override in group_vars/all.yml or host_vars)
+timezone: Europe/Moscow  # System timezone (IANA, e.g. America/New_York, UTC)
+ntp_servers:  # NTP servers for time sync (list of IPs or hostnames)
+  - 192.168.1.1

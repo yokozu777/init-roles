@@ -1,0 +1,76 @@
+---
+- block:
+    - name: Prepare to remove repositories on Oracle Linux
+      ansible.builtin.find:
+        paths: /etc/yum.repos.d
+      register: cleanup_repos
+
+    - name: Remove repositories on Oracle Linux
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ cleanup_repos.files }}"
+  when:
+    - ansible_distribution == 'OracleLinux'
+    - cleanup_repositories | default(false) | bool
+
+- block:
+    - name: Prepare to remove repositories on Ubuntu/Debian
+      ansible.builtin.find:
+        paths: /etc/apt/sources.list.d
+      register: cleanup_repos
+
+    - name: Remove repositories on Ubuntu/Debian
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ cleanup_repos.files }}"
+  when:
+    - ansible_distribution in ['Ubuntu', 'Debian']
+    - cleanup_repositories | default(false) | bool
+
+- name: Copy repo files ubuntu
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'ubuntu.sources', dest: '/etc/apt/sources.list.d/' }
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - install_additional_repos | default(false) | bool
+
+- name: Copy repo files Debian
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'debian.sources', dest: '/etc/apt/sources.list.d/' }
+  when:
+    - ansible_distribution == 'Debian'
+    - install_additional_repos | default(false) | bool
+
+- name: Copy repo files oracle9
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'oracle9.repo', dest: '/etc/yum.repos.d/' }
+  when:
+    - ansible_distribution == 'OracleLinux'
+    - ansible_distribution_version is defined
+    - ansible_distribution_version is version('9', '>=')
+    - ansible_distribution_version is version('10', '<')
+    - install_additional_repos | default(false) | bool
+
+- name: Copy repo files oracle10
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'oracle10.repo', dest: '/etc/yum.repos.d/' }
+  when:
+    - ansible_distribution == 'OracleLinux'
+    - ansible_distribution_version is defined
+    - ansible_distribution_version is version('10', '>=')
+    - install_additional_repos | default(false) | bool
+

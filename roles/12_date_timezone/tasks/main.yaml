@@ -1,0 +1,141 @@
+- name: Gather only OS distribution facts
+  ansible.builtin.setup:
+    gather_subset:
+      - min
+    filter: ansible_distribution
+
+- name: Set NTP service name based on distro
+  set_fact:
+    ntp_service_name: >-
+      {{ 'chrony' if ansible_facts['distribution'] in ['Ubuntu', 'Debian'] else (
+         'chronyd' if ansible_facts['distribution'] == 'OracleLinux' else '') }}
+
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Configure timezone data automatically (Ubuntu/Debian only)
+  ansible.builtin.command: dpkg-reconfigure -f noninteractive tzdata
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  register: tzdata_result
+  changed_when: tzdata_result.rc == 0
+  failed_when: tzdata_result.rc != 0
+  when: ansible_facts['distribution'] | default(ansible_distribution | default('')) in ['Ubuntu', 'Debian']
+
+- name: Enable NTP synchronization
+  ansible.builtin.command:
+    cmd: timedatectl set-ntp true
+
+- name: Configure chrony on Ubuntu and Debian
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Debian']
+  block:
+    - name: Remove existing pool lines from chrony config Ubuntu&Debian
+      ansible.builtin.lineinfile:
+        path: /etc/chrony/chrony.conf
+        regexp: '^pool'
+        state: absent
+
+    - name: Ensure makestep is configured for deb
+      ansible.builtin.lineinfile:
+        path: /etc/chrony/chrony.conf
+        regexp: '^makestep\s+1\.0\s+-1'
+        line: 'makestep 1.0 -1'
+        insertafter: EOF
+        create: true
+        owner: root
+        group: root
+        mode: '0644'
+        state: present
+
+    - name: Ensure chrony conf.d directory exists
+      ansible.builtin.file:
+        path: /etc/chrony/conf.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Configure NTP pool servers
+      ansible.builtin.template:
+        src: pool-servers.conf.j2
+        dest: /etc/chrony/conf.d/pool-servers.conf
+        owner: root
+        group: root
+        mode: '0644'
+      register: configure_ntp_servers_result
+      notify:
+        - Restart NTP
+
+- name: Configure NTP servers for Oracle Linux
+  when: ansible_facts['distribution'] == 'OracleLinux'
+  block:
+    - name: Configure NTP pool servers
+      ansible.builtin.template:
+        src: pool-servers.conf.j2
+        dest: /etc/chrony.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Ensure makestep is configured for oracle
+      ansible.builtin.lineinfile:
+        path: /etc/chrony.conf
+        regexp: '^makestep\s+1\.0\s+-1'
+        line: 'makestep 1.0 -1'
+        insertafter: EOF
+        state: present
+      register: configure_ntp_servers_result
+      notify:
+        - Restart NTP
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+  when: >
+    (configure_ntp_servers_result is defined and configure_ntp_servers_result.changed)
+
+- name: Force NTP requery to update offset data
+  ansible.builtin.command: chronyc -a burst 4/4
+  changed_when: false
+  failed_when: false
+
+- name: Get maximum NTP offset from ntpdata and tracking
+  ansible.builtin.shell: |
+    set -o pipefail
+    ntp1=$(chronyc ntpdata 2>/dev/null | grep -E '^ *Offset' | awk -F': +' '{print $2}' | awk '{print $1}' | sed 's/[+-]//' | sort -nr | head -n 1)
+    ntp2=$(chronyc tracking 2>/dev/null | grep -E '^System time' | awk -F': +' '{print $2}' | awk '{print $1}' | sed 's/[+-]//')
+    awk -v a="$ntp1" -v b="$ntp2" 'BEGIN { max = (a > b ? a : b); printf "%.10f\n", max }'
+  register: ntp_offset_max
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Set fact if NTP restart is required
+  set_fact:
+    restart_ntp_required: true
+  when: ntp_offset_max.stdout | float > 0.5
+
+- name: Conditionally notify NTP restart
+  ansible.builtin.debug:
+    msg: "Offset too high – triggering NTP restart"
+  when: restart_ntp_required | default(false)
+  notify:
+    - Restart NTP
+  changed_when: true
+
+- name: Force fast time synchronization with chrony
+  ansible.builtin.shell: |
+    set -e
+    chronyc -a burst 4/4
+    chronyc -a waitsync 5
+    chronyc -a makestep
+  args:
+    executable: /bin/bash
+  become: true
+  changed_when: true
+  when: restart_ntp_required | default(false)
+
+- name: Force synchronize time using chrony (simple sync)
+  ansible.builtin.command: bash -c "chronyc -a makestep && sleep 10"
+  changed_when: true
+  failed_when: false

@@ -1,0 +1,146 @@
+---
+- name: Download CA certificate (Oracle Linux)
+  ansible.builtin.shell: curl -k -o "/tmp/{{ ca_certificate_name }}" "{{ ca_certificate_url }}"
+  when:
+    - certificates_configure | bool
+    - ansible_distribution == 'OracleLinux'
+    - ca_certificate_url is defined
+    - ca_certificate_url | length > 0
+    - not ca_certificate_url.startswith('#')
+  changed_when: false
+
+- name: Download CA certificate (Ubuntu/Debian)
+  ansible.builtin.shell: wget --no-check-certificate "{{ ca_certificate_url }}" -O "/tmp/{{ ca_certificate_name }}"
+  when:
+    - certificates_configure | bool
+    - ansible_distribution in ['Ubuntu', 'Debian']
+    - ca_certificate_url is defined
+    - ca_certificate_url | length > 0
+    - not ca_certificate_url.startswith('#')
+  changed_when: false
+
+- name: Install CA certificate on Ubuntu/Debian
+  ansible.builtin.copy:
+    src: "/tmp/{{ ca_certificate_name }}"
+    dest: "/usr/local/share/ca-certificates/{{ ca_certificate_name }}"
+    mode: '0644'
+    remote_src: true
+  when:
+    - certificates_configure | bool
+    - ca_certificate_url is defined
+    - ca_certificate_url | length > 0
+    - not ca_certificate_url.startswith('#')
+    - ca_certificate_name is defined
+    - ca_certificate_name | length > 0
+    - not ca_certificate_name.startswith('#')
+    - ansible_distribution in ['Ubuntu', 'Debian']
+
+- name: Install CA certificate on Oracle Linux
+  ansible.builtin.shell: trust anchor --store "/tmp/{{ ca_certificate_name }}"
+  when:
+    - certificates_configure | bool
+    - ca_certificate_url is defined
+    - ca_certificate_url | length > 0
+    - not ca_certificate_url.startswith('#')
+    - ca_certificate_name is defined
+    - ca_certificate_name | length > 0
+    - not ca_certificate_name.startswith('#')
+    - ansible_distribution == 'OracleLinux'
+
+- name: Update CA certificates (Ubuntu/Debian)
+  ansible.builtin.command: update-ca-certificates
+  when:
+    - certificates_configure | bool
+    - ansible_distribution in ['Ubuntu', 'Debian']
+    - (ca_certificate_url is defined and ca_certificate_url | length > 0 and not ca_certificate_url.startswith('#')) or
+      (custom_certs_dir is defined and custom_certs_dir | length > 0)
+  changed_when: false
+
+- name: Clean up temporary certificate file
+  ansible.builtin.file:
+    path: "/tmp/{{ ca_certificate_name }}"
+    state: absent
+  when:
+    - certificates_configure | bool
+    - ca_certificate_url is defined
+    - ca_certificate_url | length > 0
+    - not ca_certificate_url.startswith('#')
+
+- name: Check if custom certificates directory exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/{{ custom_certs_dir }}"
+  register: custom_certs_dir_stat
+  when: certificates_configure | bool
+  delegate_to: localhost
+  become: false  # No sudo needed for checking local directory
+
+- name: Copy all files from custom certificates directory to /tmp
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/{{ custom_certs_dir }}/"
+    dest: "/tmp/"
+    mode: '0644'
+    remote_src: false
+  when:
+    - certificates_configure | bool
+    - custom_certs_dir_stat.stat.exists
+    - custom_certs_dir_stat.stat.isdir | default(false)
+
+- name: Copy custom certificates to system certificates directory (Ubuntu/Debian)
+  ansible.builtin.copy:
+    src: "/tmp/"
+    dest: "/usr/local/share/ca-certificates/"
+    mode: '0644'
+    remote_src: true
+  when:
+    - certificates_configure | bool
+    - custom_certs_dir_stat.stat.exists
+    - custom_certs_dir_stat.stat.isdir | default(false)
+    - ansible_distribution in ['Ubuntu', 'Debian']
+
+- name: Find custom certificate files in /tmp
+  ansible.builtin.find:
+    paths: /tmp
+    patterns:
+      - "*.crt"
+      - "*.pem"
+    file_type: file
+  register: custom_cert_files
+  when:
+    - certificates_configure | bool
+    - custom_certs_dir_stat.stat.exists
+    - custom_certs_dir_stat.stat.isdir | default(false)
+
+- name: Install custom certificates on Oracle Linux
+  ansible.builtin.shell: trust anchor --store "{{ item.path }}"
+  loop: "{{ custom_cert_files.files | default([]) }}"
+  when:
+    - certificates_configure | bool
+    - custom_certs_dir_stat.stat.exists
+    - custom_certs_dir_stat.stat.isdir | default(false)
+    - ansible_distribution == 'OracleLinux'
+    - custom_cert_files.files | length > 0
+  loop_control:
+    label: "{{ item.path | basename }}"
+
+- name: Update CA certificates after custom certs (Ubuntu/Debian)
+  ansible.builtin.command: update-ca-certificates
+  when:
+    - certificates_configure | bool
+    - custom_certs_dir_stat.stat.exists
+    - custom_certs_dir_stat.stat.isdir | default(false)
+    - ansible_distribution in ['Ubuntu', 'Debian']
+  changed_when: false
+
+- name: Clean up temporary custom certificate files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ custom_cert_files.files | default([]) }}"
+  when:
+    - certificates_configure | bool
+    - custom_certs_dir_stat.stat.exists
+    - custom_certs_dir_stat.stat.isdir | default(false)
+    - custom_cert_files.files is defined
+    - custom_cert_files.files | length > 0
+  loop_control:
+    label: "{{ item.path | basename }}"

@@ -1,0 +1,3 @@
+# Role 05_configure_sysctl_limits default variables (override in group_vars/all.yml or host_vars)
+copy_system_files: true  # Copy system files (e.g. sysctl.conf)
+configure_system_limits: true  # Configure system limits (file descriptors, threads)

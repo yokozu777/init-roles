@@ -1,0 +1,371 @@
+# ============================================
+# Variables for role 00_init
+# ============================================
+# Connection user (set here so connection uses it from the start)
+ansible_user: localuser
+
+# SSH port for initial connection
+# Default: 22
+initial_ssh_port: 22
+
+# Initial connection method: 'password' or 'key'
+# Default: password
+init_ssh_connect: key
+# Key for SSH: leave empty to use SSH_KEY/ANSIBLE_PRIVATE_KEY_FILE (run.sh); or set e.g. pub_keys/id_rsa for repo key
+initial_key_file: ""
+initial_user: localuser # Initial user for the system.
+initial_password: Welcomeback1* # Initial user password.
+
+# ============================================
+# Variables for role 02_init_sshd
+# ============================================
+
+# Disable root login over SSH
+# Default: false (root login allowed)
+disable_root_login: false
+
+# Disable password authentication
+# Default: false (password auth allowed)
+disable_password_auth: false
+
+# Change default SSH port (22)
+# Default: false (port unchanged)
+change_default_ssh_port: false
+
+# New SSH port (used only if change_default_ssh_port: true)
+# Example: 2222
+new_ssh_port: 2222
+
+# ============================================
+# Variables for role 03_configure_users
+# ============================================
+
+# System user name (required variable)
+# Default in role: localuser
+system_user: localuser
+
+# Change root password
+# Default: false (root password unchanged)
+change_root_password: false
+
+# New root password (used only if change_root_password: true)
+# IMPORTANT: Use ansible-vault for passwords in production!
+new_root_password: "ChangeMe123!"
+
+# Enable setting password for system_user
+# Default: false (password not set)
+enable_system_user_password: false
+
+# Password for system_user (used only if enable_system_user_password: true)
+# IMPORTANT: Use ansible-vault for passwords in production!
+system_user_password: "ChangeMe123!"
+
+# Path to folder with public SSH keys to add to the user
+# Default: undefined (no keys added)
+# Example: "/path/to/keys" or "{{ playbook_dir }}/files/ssh_keys"
+pub_keys_folder: pub_keys/ # Folder containing public SSH keys.
+
+# ============================================
+# Variables for role 12_date_timezone
+# ============================================
+
+# System timezone
+# Format: IANA timezone (e.g. Europe/Moscow, America/New_York, UTC)
+# Default: Europe/Moscow
+timezone: Europe/Moscow
+
+# NTP servers for time sync
+# Format: list of IPs or hostnames
+# Example: ["192.168.1.1", "pool.ntp.org"]
+ntp_servers:
+  - 192.168.1.1
+
+# ============================================
+# Variables for role 11_certificates
+# ============================================
+
+# Enable certificate configuration
+# Default: false (certificates not configured)
+certificates_configure: true
+
+# URL to download CA certificate
+# Default: undefined (certificate not downloaded)
+# Example: "https://ca.mxhash.com:8443/roots.pem"
+# Comment out or prefix with "#" to disable
+ca_certificate_url: "https://ca.mxhash.com:8443/roots.pem"
+
+# Filename for saving CA certificate
+# Default: undefined
+# Example: "mxhash.crt", "root-ca.pem"
+ca_certificate_name: "mxhash.crt"
+
+# Path to directory with custom certificates (relative to playbook_dir)
+# Default: undefined (custom certs not installed)
+# Example: "files/certs" or "certificates"
+# All .crt and .pem files from this directory will be installed
+custom_certs_dir: ""
+
+# ============================================
+# Variables for role 14_install_software
+# ============================================
+
+# Additional packages to install
+# Format: space-separated string or list
+# Example: "jq nano vim" or ["jq", "nano", "vim"]
+# Default: undefined (only base packages installed)
+install_packages: ""
+
+# Packages to remove
+# Format: space-separated string or list
+# Example: "package1 package2" or ["package1", "package2"]
+# Default: undefined (no packages removed)
+uninstall_packages: ""
+
+# NOTE: System update is in role 17_update_reboot
+# Use variable update_now in section 17_update_reboot
+
+# ============================================
+# Variables for role 13_configure_repo
+# ============================================
+
+# Clean existing repositories before configuration
+# Default: false (repos not cleaned)
+# When true, all existing repositories will be removed
+cleanup_repositories: true
+
+# Configure repositories for the system
+# Default: false (repos not copied)
+# When true, repos are configured automatically by OS type:
+#   - Ubuntu: ubuntu.sources
+#   - Debian: debian.sources
+#   - Oracle Linux 9: oracle9.repo
+#   - Oracle Linux 10: oracle10.repo
+install_additional_repos: true
+
+# ============================================
+# Variables for role 04_configure_hostname
+# ============================================
+
+# ============================================
+# Variables for role 05_configure_sysctl_limits
+# ============================================
+
+# Copy system files (sysctl.conf)
+# Default: false (files not copied)
+copy_system_files: true
+
+# Configure system limits (file descriptors, threads)
+# Default: false (limits not configured)
+configure_system_limits: true
+
+# ============================================
+# Variables for role 06_configure_kernel
+# ============================================
+
+# Configure kernel parameters (GRUB/EFI)
+# Default: false (kernel params not configured)
+# When true, kernel params are updated and GRUB is rebuilt
+configure_kernel_params: false
+
+# Enable pstate configuration for CPU performance
+# Default: false (pstate not configured)
+# When true, amd_pstate or intel_pstate params added depending on CPU vendor
+pstate_performance: false
+
+# AMD pstate value (only if pstate_performance: true and AMD CPU)
+# Allowed: "active", "passive", "guided"
+# Default: "active"
+amd_pstate: "active"
+
+# Intel pstate value (only if pstate_performance: true and Intel CPU)
+# Allowed: "active", "passive"
+# Default: "active"
+intel_pstate: "active"
+
+# Change SMT (Simultaneous Multi-Threading) settings
+# Default: false (SMT unchanged)
+# When true, nosmt=force is added to kernel parameters
+change_smt: false
+
+# SMT value (only if change_smt: true)
+# Allowed: "on", "off"
+# Default: "off"
+smt: "off"
+
+# Disable IPv6
+# Default: false (IPv6 not disabled)
+# When true, IPv6 disabled in sysctl and ipv6.disable=1 added to kernel
+disable_ipv6: true
+
+# Additional kernel parameters
+# Format: space-separated string
+# Example: "quiet splash"
+# Default: undefined
+default_kernel_params: ""
+
+# IOMMU kernel parameter
+# Format: parameter string
+# Example: "iommu=on" or "intel_iommu=on"
+# Default: undefined
+iommu_param: ""
+
+# ============================================
+# Variables for role 07_remove_unwanted_services
+# ============================================
+
+# Remove cloud-init
+# Default: false (cloud-init not removed)
+# When true, cloud-init will be removed
+remove_cloud_init: true
+
+# Remove snap
+# Default: false (snap not removed)
+# When true, snap will be removed
+# Note: Ubuntu only
+remove_snap: true
+
+# Disable systemd-resolved
+# Default: false (systemd-resolved not disabled)
+# Note: Ubuntu/Debian only
+disable_systemd_resolved: true
+
+# ============================================
+# Variables for role 08_configure_security
+# ============================================
+
+# Disable SELinux
+# Default: false (SELinux not disabled)
+# Note: Oracle Linux only
+disable_selinux: true
+
+# Disable AppArmor
+# Default: false (AppArmor not disabled)
+# When true, AppArmor service will be stopped and disabled
+apparmor_disable: true
+
+# ============================================
+# Variables for role 09_configure_locales
+# ============================================
+
+# Configure system locales
+# Default: false (locales not configured)
+# When true, locales configured automatically by OS type
+configure_locales: true
+
+# Additional locales to generate (Ubuntu/Debian)
+# Format: list of locale strings
+# Example: ["en_US.UTF-8 UTF-8", "ru_RU.UTF-8 UTF-8"]
+# Default: undefined (no locales added)
+# Note: Ubuntu/Debian only
+additional_locales: ["en_US.UTF-8 UTF-8", "ru_RU.UTF-8 UTF-8"]
+
+# Default system locale
+# Format: locale string
+# Example: "en_US.UTF-8", "ru_RU.UTF-8"
+# Default: undefined (en_US.UTF-8 used)
+# Applied automatically by OS type
+default_locale: "en_US.UTF-8"
+
+# ============================================
+# Variables for role 10_manage_services
+# ============================================
+
+# List of services to manage (enable/disable)
+# Format: list of dicts with name and disable
+# Example:
+#   - { name: "service1", disable: true }
+#   - { name: "service2", disable: false }
+# Default: undefined (no services managed)
+services_to_disable: []
+
+# ============================================
+# Variables for role 01_backup_etc
+# ============================================
+
+# Create backup of /etc before configuration
+# Default: false (backup not created)
+backup_etc: false
+
+# ============================================
+# Variables for role 15_configure_bash
+# ============================================
+
+# Configure Bash (prompt, history)
+# Default: false (Bash not configured)
+configure_bash: true
+
+# Custom Bash prompt
+# Format: string with escape sequences
+# Example: "\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]$ "
+# Default: undefined
+custom_bash_prompt: '\[\033[01;33m\]\u@\h\[\033[00m\]:\[\033[01;32m\]\w\[\033[00m\] \[\033[01;34m\][\#]\[\033[01;31m\]\$\[\033[00m\] '
+#"\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]$ "
+
+# Bash history size
+# Format: number
+# Example: 10000
+# Default: undefined
+bash_history_size: 10000
+
+# ============================================
+# Variables for role 16_configure_network
+# ============================================
+
+# Configure network interfaces
+# Default: false (network not configured)
+configure_network: false
+
+# Network config for Ubuntu/Debian (/etc/network/interfaces)
+# Format: multiline string
+# Example: |
+#   auto eth0
+#   iface eth0 inet static
+#     address 192.168.1.100
+#     netmask 255.255.255.0
+#     gateway 192.168.1.1
+# Default: undefined
+network_config: ""
+
+# Network interface config for Oracle Linux
+# Format: list of dicts with name, type, bootproto, device, ipaddr, netmask, gateway, dns1, dns2
+# Example:
+#   - name: eth0
+#     type: Ethernet
+#     bootproto: static
+#     device: eth0
+#     ipaddr: 192.168.1.100
+#     netmask: 255.255.255.0
+#     gateway: 192.168.1.1
+#     dns1: 8.8.8.8
+#     dns2: 8.8.4.4
+# Default: undefined
+network_interfaces: []
+
+# DNS servers
+# Format: list of IPs
+# Example: ["8.8.8.8", "8.8.4.4"]
+# Default: undefined
+dns_servers: ["192.168.1.1"]
+
+# ============================================
+# Variables for role 17_update_reboot
+# ============================================
+
+# Run system update immediately
+# Default: false (system not updated immediately)
+# When true, full package update is performed
+update_now: false
+
+# Enable automatic system update via cron
+# Default: false (auto-update not configured)
+system_update_scheduler: true
+
+# Time for automatic update
+# Format: "HH:MM" (24-hour)
+# Example: "03:00"
+# Default: undefined
+update_schedule_time: "03:00"
+
+# Reboot system after configuration
+# Default: false (system not rebooted)
+reboot_system: false

@@ -1,0 +1,74 @@
+# Runtime logs (do not commit)
+web/logs/
+data/logs/
+
+# Runtime PID files (do not commit)
+web/.pids/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+web/venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+web/logs/
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Ansible
+*.retry
+.ansible/
+roles/024_prepare_disk/
+vars-file.yml
+ansible.cfg
+ansible_local_execute.cfg
+inventory.yml
+pub_keys/
+
+# Host variables (keep only example.yml)
+host_vars/*.yml
+!host_vars/example.yml
+
+# Infrastructure and CI/CD
+variables.tf
+Jenkinsfile
+run-dev.sh
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+*~
+
+# Data directory - temporary and runtime files
+data/temp/
+data/backups/
+data/projects/*/secrets-storage/
+data/projects/*/ssh_keys/
+data/projects/*/executions/*.json
+
+# Worker tokens (sensitive)
+web/worker/.token
+*.token

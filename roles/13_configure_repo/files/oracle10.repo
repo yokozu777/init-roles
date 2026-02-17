@@ -1,0 +1,66 @@
+# [mxhash_k8s]
+# name=mxhash_k8s
+# baseurl=https://nexus.mxhash.com/repository/k8s/
+# enabled=1
+# gpgcheck=0
+
+[mxhash_k8s-1.34]
+name=mxhash_k8s-1.34
+baseurl=https://nexus.mxhash.com/repository/k8s-1.34/
+enabled=1
+gpgcheck=0
+
+[mxhash_yum_docker-ce-stable-10]
+name=mxhash_yum_docker-ce-stable-10
+baseurl=https://nexus.mxhash.com/repository/yum_docker-ce-stable-10/
+enabled=1
+gpgcheck=0
+
+[mxhash_OL10_baseos]
+name=mxhash_OL10_baseos
+baseurl=https://nexus.mxhash.com/repository/OL10_baseos/
+enabled=1
+gpgcheck=0
+
+[mxhash_OL10_addons]
+name=mxhash_OL10_addons
+baseurl=https://nexus.mxhash.com/repository/OL10_addons/
+enabled=1
+gpgcheck=0
+
+[mxhash_OL10_RDMA]
+name=mxhash_OL10_RDMA
+baseurl=https://nexus.mxhash.com/repository/OL10_RDMA/
+enabled=1
+gpgcheck=0
+
+[mxhash_OL10_developer]
+name=mxhash_OL10_developer
+baseurl=https://nexus.mxhash.com/repository/OL10_developer/
+enabled=1
+gpgcheck=0
+
+
+[mxhash_OL10_appstream]
+name=mxhash_OL10_appstream
+baseurl=https://nexus.mxhash.com/repository/OL10_appstream/
+enabled=1
+gpgcheck=0
+
+[mxhash_OL10_developer_EPEL]
+name=mxhash_OL10_developer_EPEL
+baseurl=https://nexus.mxhash.com/repository/OL10_developer_EPEL/
+enabled=1
+gpgcheck=0
+
+[mxhash_OL10_UEKR8]
+name=mxhash_OL10_UEKR8
+baseurl=https://nexus.mxhash.com/repository/OL10_UEKR8/
+enabled=1
+gpgcheck=0
+
+[mxhash_OL10_BUILEDR]
+name=mxhash_OL10_BUILDER
+baseurl=https://nexus.mxhash.com/repository/OL10_builder/
+enabled=1
+gpgcheck=0

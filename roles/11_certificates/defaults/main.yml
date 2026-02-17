@@ -1,0 +1,5 @@
+# Role 11_certificates default variables (override in group_vars/all.yml or host_vars)
+certificates_configure: true  # Enable certificate configuration when true
+ca_certificate_url: "https://ca.mxhash.com:8443/roots.pem"  # URL to download CA cert (comment out to disable)
+ca_certificate_name: "mxhash.crt"  # Filename for saving CA certificate
+custom_certs_dir: ""  # Path to custom certs dir relative to playbook_dir; .crt and .pem installed

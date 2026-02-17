@@ -1,0 +1,7 @@
+# Role 03_configure_users default variables (override in group_vars/all.yml or host_vars)
+system_user: localuser  # System user name (required)
+change_root_password: false  # Change root password
+new_root_password: "ChangeMe123!"  # New root password (use ansible-vault in production)
+enable_system_user_password: false  # Set password for system_user
+system_user_password: "ChangeMe123!"  # Password for system_user (use ansible-vault in production)
+pub_keys_folder: pub_keys/  # Folder with public SSH keys to add to user (relative path)

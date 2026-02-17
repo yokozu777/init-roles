@@ -1,0 +1,6 @@
+# Role 00_init default variables (override in group_vars/all.yml or host_vars)
+initial_ssh_port: 22  # SSH port for initial connection
+init_ssh_connect: key  # Initial connection method: 'password' or 'key'
+initial_key_file: pub_keys/id_rsa  # Path to private key (relative to playbook_dir)
+ansible_user: "{{ initial_user }}"  # Initial user for the system
+initial_password: "Welcomeback1*"  # Initial user password (use ansible-vault in production)
