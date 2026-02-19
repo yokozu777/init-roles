@@ -3,3 +3,4 @@ all:
     example-host:
       ansible_host: 192.168.1.100  # Replace with your host IP
       vars_file: host_vars/example.yml
+      hostname: example-host.example.com  # Optional: set hostname directly in inventory

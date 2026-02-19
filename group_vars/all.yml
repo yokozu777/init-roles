@@ -17,6 +17,14 @@ initial_user: localuser # Initial user for the system.
 initial_password: Welcomeback1* # Initial user password.
 
 # ============================================
+# Variables for role 01_backup_etc
+# ============================================
+
+# Create backup of /etc before configuration
+# Default: false (backup not created)
+backup_etc: false
+
+# ============================================
 # Variables for role 02_init_sshd
 # ============================================
 
@@ -64,83 +72,6 @@ system_user_password: "ChangeMe123!"
 # Default: undefined (no keys added)
 # Example: "/path/to/keys" or "{{ playbook_dir }}/files/ssh_keys"
 pub_keys_folder: pub_keys/ # Folder containing public SSH keys.
-
-# ============================================
-# Variables for role 12_date_timezone
-# ============================================
-
-# System timezone
-# Format: IANA timezone (e.g. Europe/Moscow, America/New_York, UTC)
-# Default: Europe/Moscow
-timezone: Europe/Moscow
-
-# NTP servers for time sync
-# Format: list of IPs or hostnames
-# Example: ["192.168.1.1", "pool.ntp.org"]
-ntp_servers:
-  - 192.168.1.1
-
-# ============================================
-# Variables for role 11_certificates
-# ============================================
-
-# Enable certificate configuration
-# Default: false (certificates not configured)
-certificates_configure: true
-
-# URL to download CA certificate
-# Default: undefined (certificate not downloaded)
-# Example: "https://ca.mxhash.com:8443/roots.pem"
-# Comment out or prefix with "#" to disable
-ca_certificate_url: "https://ca.mxhash.com:8443/roots.pem"
-
-# Filename for saving CA certificate
-# Default: undefined
-# Example: "mxhash.crt", "root-ca.pem"
-ca_certificate_name: "mxhash.crt"
-
-# Path to directory with custom certificates (relative to playbook_dir)
-# Default: undefined (custom certs not installed)
-# Example: "files/certs" or "certificates"
-# All .crt and .pem files from this directory will be installed
-custom_certs_dir: ""
-
-# ============================================
-# Variables for role 14_install_software
-# ============================================
-
-# Additional packages to install
-# Format: space-separated string or list
-# Example: "jq nano vim" or ["jq", "nano", "vim"]
-# Default: undefined (only base packages installed)
-install_packages: ""
-
-# Packages to remove
-# Format: space-separated string or list
-# Example: "package1 package2" or ["package1", "package2"]
-# Default: undefined (no packages removed)
-uninstall_packages: ""
-
-# NOTE: System update is in role 17_update_reboot
-# Use variable update_now in section 17_update_reboot
-
-# ============================================
-# Variables for role 13_configure_repo
-# ============================================
-
-# Clean existing repositories before configuration
-# Default: false (repos not cleaned)
-# When true, all existing repositories will be removed
-cleanup_repositories: true
-
-# Configure repositories for the system
-# Default: false (repos not copied)
-# When true, repos are configured automatically by OS type:
-#   - Ubuntu: ubuntu.sources
-#   - Debian: debian.sources
-#   - Oracle Linux 9: oracle9.repo
-#   - Oracle Linux 10: oracle10.repo
-install_additional_repos: true
 
 # ============================================
 # Variables for role 04_configure_hostname
@@ -279,12 +210,81 @@ default_locale: "en_US.UTF-8"
 services_to_disable: []
 
 # ============================================
-# Variables for role 01_backup_etc
+# Variables for role 11_certificates
 # ============================================
 
-# Create backup of /etc before configuration
-# Default: false (backup not created)
-backup_etc: false
+# Enable certificate configuration
+# Default: false (certificates not configured)
+certificates_configure: false
+
+# URL to download CA certificate
+# Default: undefined (certificate not downloaded)
+# Example: "https://ca.mxhash.com:8443/roots.pem"
+# Comment out or prefix with "#" to disable
+ca_certificate_url: "https://ca.mxhash.com:8443/roots.pem"
+
+# Filename for saving CA certificate
+# Default: undefined
+# Example: "mxhash.crt", "root-ca.pem"
+ca_certificate_name: "mxhash.crt"
+
+# Path to directory with custom certificates (relative to playbook_dir)
+# Default: undefined (custom certs not installed)
+# Example: "files/certs" or "certificates"
+# All .crt and .pem files from this directory will be installed
+custom_certs_dir: ""
+
+# ============================================
+# Variables for role 12_date_timezone
+# ============================================
+
+# System timezone
+# Format: IANA timezone (e.g. Europe/Moscow, America/New_York, UTC)
+# Default: Europe/Moscow
+timezone: Europe/Moscow
+
+# NTP servers for time sync
+# Format: list of IPs or hostnames
+# Example: ["192.168.1.1", "pool.ntp.org"]
+ntp_servers:
+  - 192.168.1.1
+
+# ============================================
+# Variables for role 13_configure_repo
+# ============================================
+
+# Clean existing repositories before configuration
+# Default: false (repos not cleaned)
+# When true, all existing repositories will be removed
+cleanup_repositories: false
+
+# Configure repositories for the system
+# Default: false (repos not copied)
+# When true, repos are configured automatically by OS type:
+#   - Ubuntu: ubuntu.sources
+#   - Debian: debian.sources
+#   - Oracle Linux 9: oracle9.repo
+#   - Oracle Linux 10: oracle10.repo
+install_additional_repos: false
+
+# ============================================
+# Variables for role 14_install_software
+# ============================================
+
+# Additional packages to install
+# Format: space-separated string or list
+# Example: "jq nano vim" or ["jq", "nano", "vim"]
+# Default: undefined (only base packages installed)
+install_packages: ""
+
+# Packages to remove
+# Format: space-separated string or list
+# Example: "package1 package2" or ["package1", "package2"]
+# Default: undefined (no packages removed)
+uninstall_packages: ""
+
+# NOTE: System update is in role 17_update_reboot
+# Use variable update_now in section 17_update_reboot
 
 # ============================================
 # Variables for role 15_configure_bash
@@ -358,7 +358,7 @@ update_now: false
 
 # Enable automatic system update via cron
 # Default: false (auto-update not configured)
-system_update_scheduler: true
+system_update_scheduler: false
 
 # Time for automatic update
 # Format: "HH:MM" (24-hour)
